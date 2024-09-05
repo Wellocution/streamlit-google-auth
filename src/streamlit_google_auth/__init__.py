@@ -32,10 +32,17 @@ class Authenticate:
             )
         return authorization_url
 
+    def clear_auth_state(self):
+        """Clear the authentication state and cookies."""
+        st.session_state['connected'] = False
+        st.session_state['user_info'] = None
+        st.session_state['oauth_id'] = None
+        self.cookie_handler.delete_cookie()
+
     def login(self, color:Literal['white', 'blue']='blue', justify_content: str="center") -> tuple:
         if not st.session_state['connected']:
             flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
-                self.secret_credentials_path, # replace with you json credentials from your google auth app
+                self.secret_credentials_path,
                 scopes=["openid", "https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email"],
                 redirect_uri=self.redirect_uri,
             )
@@ -43,6 +50,7 @@ class Authenticate:
             authorization_url, state = flow.authorization_url(
                     access_type="offline",
                     include_granted_scopes="true",
+                    prompt="select_account"  # Add this line to force account selection
                 )
             
             html_content = f"""
